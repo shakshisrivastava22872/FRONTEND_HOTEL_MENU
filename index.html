@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hotel Menu</title>
+<style>
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background: #121212;
+  color: #f5f5f5;
+}
+
+h1 {
+  text-align: center;
+  padding: 20px;
+  letter-spacing: 2px;
+  animation: fadeIn 2s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-20px);} 
+  to { opacity: 1; transform: translateY(0);} 
+}
+
+.controls {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+select {
+  padding: 10px;
+  border-radius: 5px;
+  border: none;
+  margin: 5px;
+  background: #1e1e1e;
+  color: white;
+}
+
+.menu {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  padding: 20px;
+}
+
+.card {
+  background: #1e1e1e;
+  border-radius: 15px;
+  overflow: hidden;
+  perspective: 1000px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.6);
+  transition: transform 0.4s;
+}
+
+.card:hover {
+  transform: translateY(-10px) scale(1.03);
+}
+
+.card-inner {
+  position: relative;
+  width: 100%;
+  height: 320px;
+  transform-style: preserve-3d;
+  transition: transform 0.8s;
+}
+
+.card:hover .card-inner {
+  transform: rotateY(180deg);
+}
+
+.card-front, .card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+}
+
+.card-front img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  transition: transform 0.5s;
+}
+
+.card:hover img {
+  transform: scale(1.1);
+}
+
+.card-front h3 {
+  text-align: center;
+}
+
+.card-front p {
+  text-align: center;
+  color: #bbb;
+}
+
+.card-back {
+  background: #2c2c2c;
+  color: #fff;
+  transform: rotateY(180deg);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+button {
+  padding: 10px 15px;
+  border: none;
+  background: #ff9800;
+  color: black;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #ffc107;
+}
+
+.cart {
+  position: fixed;
+  top: 15px;
+  right: 15px;
+  background: #1e1e1e;
+  color: #fff;
+  padding: 10px 15px;
+  border-radius: 10px;
+}
+</style>
+</head>
+<body>
+
+<h1>Hotel Menu</h1>
+
+<div class="controls">
+  <select id="categoryFilter">
+    <option value="all">All</option>
+    <option value="Starter">Starter</option>
+    <option value="Mains">Mains</option>
+  </select>
+
+  <select id="priceFilter">
+    <option value="all">All Prices</option>
+    <option value="low">Below ₹200</option>
+    <option value="mid">₹200 - ₹400</option>
+    <option value="high">Above ₹400</option>
+  </select>
+</div>
+
+<div class="cart">🛒 Cart: <span id="cart-count">0</span></div>
+<div class="menu" id="menu"></div>
+
+<script>
+const dishes = [
+  {name:"Mater Paneer", type:"Mains", price:450, img:"photo/images.jpg"},
+  {name:"Paneer Tikka", type:"Starter", price:250, img:"photo/air-fryer-paneer-tikka-featured.jpg"},
+  {name:"Biryani", type:"Mains", price:350, img:"photo/How-to-Make-Chicken-Biryani-Video.jpg"},
+  {name:"Masala Dosa", type:"Starter", price:150, img:"photo/Masala-dosa-1.webp"},
+  {name:"Chole Bhature", type:"Starter", price:180, img:"photo/MR-Chole-Bhature-featured-585x585.jpg"},
+  {name:"Dal Makhani", type:"Starter", price:220, img:"photo/Dal-Makhani-Blog.jpg"},
+  {name:"Rogan Josh", type:"Mains", price:500, img:"photo/Rogan_Josh_Kashmiri.jpg"},
+  {name:"Samosa", type:"Starter", price:50, img:"photo/samosa-recipe.jpg"},
+  {name:"Pav Bhaji", type:"Starter", price:160, img:"photo/images (1).jpg"},
+  {name:"Malai Chaap", type:"Starter", price:400, img:"photo/malai-chaap-recipe-at-home.jpg"},
+  {name:"Rajma Chawal", type:"Mains", price:140, img:"photo/rajma-chawal-1-500x500.jpg"},
+  {name:"Kadhi Pakora", type:"Mains", price:180, img:"photo/images (2).jpg"},
+  {name:"Aloo Paratha", type:"Starter", price:120, img:"photo/images (3).jpg"},
+  {name:"Gulab Jamun", type:"Starter", price:100, img:"photo/download.jpg"},
+  {name:"Rasmalai", type:"Starter", price:120, img:"photo/Rosmalai).jpg"},
+  {name:"Tandoori Roti", type:"Mains", price:120, img:"photo/tanduri.jpg"}
+];
+
+let cart = 0;
+
+const menu = document.getElementById("menu");
+const cartCount = document.getElementById("cart-count");
+
+function renderMenu(filteredDishes) {
+  menu.innerHTML = "";
+  filteredDishes.forEach((dish, index) => {
+    const card = document.createElement("div");
+    card.className = "card";
+
+    card.innerHTML = `
+      <div class="card-inner">
+        <div class="card-front">
+          <img src="${dish.img}" alt="${dish.name}">
+          <h3>${dish.name}</h3>
+          <p>₹${dish.price}</p>
+        </div>
+        <div class="card-back">
+          <h3>${dish.name}</h3>
+          <p>₹${dish.price}</p>
+          <button onclick="addToCart()">Add to Cart</button>
+        </div>
+      </div>
+    `;
+
+    menu.appendChild(card);
+  });
+}
+
+function filterMenu() {
+  const category = document.getElementById("categoryFilter").value;
+  const price = document.getElementById("priceFilter").value;
+
+  let filtered = dishes.filter(dish => {
+    let categoryMatch = category === "all" || dish.type === category;
+
+    let priceMatch = true;
+    if (price === "low") priceMatch = dish.price < 200;
+    else if (price === "mid") priceMatch = dish.price >= 200 && dish.price <= 400;
+    else if (price === "high") priceMatch = dish.price > 400;
+
+    return categoryMatch && priceMatch;
+  });
+
+  renderMenu(filtered);
+}
+
+function addToCart() {
+  cart++;
+  cartCount.textContent = cart;
+}
+
+document.getElementById("categoryFilter").addEventListener("change", filterMenu);
+document.getElementById("priceFilter").addEventListener("change", filterMenu);
+
+renderMenu(dishes);
+</script>
+
+</body>
+</html>
